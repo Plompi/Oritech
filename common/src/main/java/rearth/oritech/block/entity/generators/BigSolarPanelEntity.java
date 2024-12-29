@@ -70,14 +70,16 @@ public class BigSolarPanelEntity extends PassiveGeneratorBlockEntity implements 
     public int getProductionRate() {
         var baseRate = ((BigSolarPanelBlock) this.getCachedState().getBlock()).productionRate;
         var skyLightLevel = world.getLightLevel(LightType.SKY, this.getPos());
-        isFolded = world.isNight() && skyLightLevel < 12;
+        var skyVisible = world.isSkyVisible(this.getPos().add(0, 2, 0));
+        isFolded = world.isNight() && skyLightLevel < 12 || !skyVisible;
         return (int) (coreQuality * baseRate);
     }
     
     @Override
     public boolean isProducing() {
         var skyLightLevel = world.getLightLevel(LightType.SKY, this.getPos());
-        return !world.isNight() && skyLightLevel >= 12 && isActive(getCachedState());
+        var skyVisible = world.isSkyVisible(this.getPos().add(0, 2, 0));
+        return !world.isNight() && skyLightLevel >= 12 && isActive(getCachedState()) && skyVisible;
     }
     
     public void sendInfoMessageToPlayer(PlayerEntity player) {
@@ -180,8 +182,9 @@ public class BigSolarPanelEntity extends PassiveGeneratorBlockEntity implements 
             // update correct state on client
             var timeOfDay = getAdjustedTimeOfDay();
             var skyLightLevel = world.getLightLevel(LightType.SKY, this.getPos());
+            var skyVisible = world.isSkyVisible(this.getPos().add(0,2,0));
             var isDay = timeOfDay > 0 && timeOfDay < 12500;
-            isFolded = !isDay || skyLightLevel < 12;
+            isFolded = !isDay || skyLightLevel < 12 || !skyVisible;
             
             if (isFolded) {
                 return state.setAndContinue(FOLD);
